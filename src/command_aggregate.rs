@@ -9,7 +9,7 @@ pub(crate) async fn aggregate_log(
     path: &PathBuf,
     minimal_similarity: f32,
     minimal_frequency: i32,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<Vec<(String, i32)>> {
     let f = File::open(path).await?;
     let reader = BufReader::new(f);
     let lines = reader.lines();
@@ -39,9 +39,5 @@ pub(crate) async fn aggregate_log(
         .collect();
     results.sort_by(|(_, count1), (_, count2)| count1.cmp(count2));
 
-    for (warning, count) in results {
-        println!("Count: {}, \n\n\t{}\n", count, warning);
-    }
-
-    Ok(())
+    Ok(results)
 }

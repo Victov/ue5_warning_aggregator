@@ -3,11 +3,15 @@ Tool to scan logs from your Unreal Engine project and aggregate frequently-occur
 
 ### usage
 
-Run from cargo with a minimal similarity score of 80% and warnings have to occur at least twice before being outputted.
-`cargo run -- aggregate --logfile <path_to_log> --min_similarity 80 --min_frequency 2`
+Run from cargo 
+- with a minimal similarity score of 80% 
+- warnings have to occur at least twice before being outputted
+- print result to stdout
+- print result to out.txt
+
+`cargo run -- aggregate --logfile <path_to_log> --min_similarity 80 --min_frequency 2 --stdout -o out.txt`
 
 ### planned features
 - Scan and aggregate multiple files (e.g. scan output of build, cook and runtime)
 - Improved output clarity
-- Output to file instead of console
 

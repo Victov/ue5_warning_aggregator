@@ -3,6 +3,7 @@ use clap::{arg, command, value_parser, ArgAction, Command};
 use std::path::PathBuf;
 
 mod command_aggregate;
+mod output;
 
 #[async_std::main]
 async fn main() -> Result<()> {
@@ -21,14 +22,24 @@ async fn main() -> Result<()> {
                     .action(ArgAction::Set)
                     .default_value("1")
                     .value_parser(clap::builder::RangedI64ValueParser::<i32>::new().range(0..100))
-                    )
-
+                )
                 .arg(
                     arg!(-l --logfile <FILE> "Path to logfile to operate on")
                         .required(true)
                         .value_parser(value_parser!(PathBuf)),
-                ),
-        )
+                )
+                .arg(
+                    arg!(-o --output <FILE> "Path to output file")
+                    .required(false)
+                    .value_parser(value_parser!(PathBuf)),
+                )
+                .arg(
+                    arg!(--stdout "Print output to console")
+                    .action(ArgAction::SetTrue)
+                    .required(false)
+                    .value_parser(value_parser!(bool)),
+                    ),
+                )
         .get_matches();
 
     if let Some(matches) = matches.subcommand_matches("aggregate") {
@@ -39,9 +50,19 @@ async fn main() -> Result<()> {
         let minimal_frequency = *matches
             .get_one::<i32>("min_frequency")
             .expect("shoudl have default!");
+        let print_to_stdout = *matches.get_one::<bool>("stdout").unwrap_or(&false);
 
         if let Some(path) = matches.get_one::<PathBuf>("logfile").as_ref() {
-            command_aggregate::aggregate_log(path, minimal_similarity, minimal_frequency).await?;
+            let result =
+                command_aggregate::aggregate_log(path, minimal_similarity, minimal_frequency)
+                    .await?;
+
+            if print_to_stdout {
+                output::output_stdout(&result);
+            }
+            if let Some(out_path) = matches.get_one::<PathBuf>("output") {
+                output::output_file(&result, out_path).await?;
+            }
         } else {
             unreachable!("clap should enforce that there is always some path provided");
         }
